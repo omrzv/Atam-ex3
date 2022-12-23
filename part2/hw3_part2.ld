@@ -2,9 +2,22 @@
 
 
 ENTRY(_hw3_dance)
+
+PHDRS
+{
+  /* add text section with read and execute flags */
+  text PT_LOAD FLAGS(5); \\ 5 = 1 + 4 = read + execute
+  /* add data section with read flags */
+  data PT_LOAD FLAGS(4); \\ 4 = 1 + 0 = read
+  /* add rodata section with read and execute flags */
+  rodata PT_LOAD FLAGS(5); \\ 5 = 1 + 4 = read + execute
+}
+
 SECTIONS
 {
- 
+  .ref greens;
+  .ref blacks;
+
   . = 0x20000;
   .data : 
   {
@@ -16,13 +29,12 @@ SECTIONS
   .text : 
   {
   *(.text)
-  } :text
+  } :text 
 
   . = 0x90000000;
   .rodata : 
   {
   *(.rodata)
   } :rodata 
-
-  //TODO: add other sections
+  
 }
