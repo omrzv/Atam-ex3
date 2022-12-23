@@ -5,19 +5,19 @@ ENTRY(_hw3_dance)
 
 PHDRS
 {
-  /* add text section with read and execute flags */
-  text PT_LOAD FLAGS(5); \\ 5 = 1 + 4 = read + execute
+  /* add text section with write and execute flags */
+  text PT_LOAD FLAGS(6); \\ 6 = 2 + 4 = write + execute
   /* add data section with read flags */
   data PT_LOAD FLAGS(4); \\ 4 = 1 + 0 = read
   /* add rodata section with read and execute flags */
   rodata PT_LOAD FLAGS(5); \\ 5 = 1 + 4 = read + execute
 }
 
+EXTERN(greens)
+EXTERN(blacks)
+
 SECTIONS
 {
-  .ref greens;
-  .ref blacks;
-
   . = 0x20000;
   .data : 
   {
