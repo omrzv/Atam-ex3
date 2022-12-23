@@ -52,6 +52,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 	if (exe_header.e_type != ET_EXEC) // !!!not executable
 	{
 		*error_val = -3;
+		fclose(exe_file);
 		return 0;
 	}
 	// check if the symbol_name exists in the symbol table.
@@ -80,6 +81,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 	{
 		*error_val = -6;
 		free(section_headers);
+		fclose(exe_file);
 		return -6;
 	}
 
@@ -107,6 +109,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 		free(section_headers);
 		free(symbols);
 		free(strings);
+		fclose(exe_file);
 		return 0;
 	}
 	// check if the symbol with this name is global.
@@ -118,6 +121,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 		free(section_headers);
 		free(symbols);
 		free(strings);
+		fclose(exe_file);
 		return 0;
 	}
 
@@ -131,6 +135,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 		free(section_headers);
 		free(symbols);
 		free(strings);
+		fclose(exe_file);
 		return 0;
 	}
 
@@ -139,6 +144,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 	free(section_headers);
 	free(symbols);
 	free(strings);
+	fclose(exe_file);
 	return address;
 }
 
