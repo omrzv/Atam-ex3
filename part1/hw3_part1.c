@@ -45,7 +45,7 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 	if (exe_file == NULL)
 	{
 		*error_val = -5;
-		return -5;
+		return 0;
 	}
 	Elf64_Ehdr exe_header;
 	fread(&exe_header, sizeof(Elf64_Ehdr), 1, exe_file);
@@ -64,6 +64,8 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 	// get values of symbol table and string table
 	Elf64_Shdr *symbol_table = NULL;
 	Elf64_Shdr *string_table = NULL;
+        char hdr[9]; //we are searching for ".strtab"(7 chars + '\0' + extra one);
+        hdr[8] = '\0'; // if a longer header name is read, we will put NULL terminator to avoid longer string read
 	for (int i = 0; i < exe_header.e_shnum; i++)
 	{
 		if (section_headers[i].sh_type == SHT_SYMTAB)
@@ -72,26 +74,33 @@ unsigned long find_symbol(char *symbol_name, char *exe_file_name, int *error_val
 		}
 		else if (section_headers[i].sh_type == SHT_STRTAB)
 		{
-			string_table = &section_headers[i];
+    	               fseek(exe_file, section_headers[exe_header.e_shstrndx].sh_offset + section_headers[i].sh_name, SEEK_SET);
+    	               fread(hdr, 8, 1, exe_file);
+                       if(!strcmp(hdr, ".strtab"))
+			 string_table = &section_headers[i];
+
 		}
 		if (symbol_table != NULL && string_table != NULL)
 			break;
 	}
+
 	if (symbol_table == NULL || string_table == NULL)
 	{
 		*error_val = -6;
 		free(section_headers);
 		fclose(exe_file);
-		return -6;
+		return 0;
 	}
-
-	Elf64_Sym *symbols = malloc(sizeof(Elf64_Sym) * symbol_table->sh_size / symbol_table->sh_entsize);
-	fseek(exe_file, symbol_table->sh_offset, SEEK_SET);
-	fread(symbols, sizeof(Elf64_Sym), symbol_table->sh_size / symbol_table->sh_entsize, exe_file);
 	char *strings = malloc(string_table->sh_size);
+
 	fseek(exe_file, string_table->sh_offset, SEEK_SET);
 	fread(strings, string_table->sh_size, 1, exe_file);
+        Elf64_Sym *symbols = malloc(symbol_table->sh_size);
+        fseek(exe_file, symbol_table->sh_offset, SEEK_SET);
+        fread(symbols, symbol_table->sh_entsize, symbol_table->sh_size / symbol_table->sh_entsize, exe_file);
+	
 	Elf64_Sym *symbol = NULL;
+
 	for (int i = 0; i < symbol_table->sh_size / symbol_table->sh_entsize; i++)
 	{
 		if (strcmp(&strings[symbols[i].st_name], symbol_name) == 0)
@@ -163,5 +172,5 @@ int main(int argc, char *const argv[])
 		printf("%s not an executable! :(\n", argv[2]);
 	else if (err == -4)
 		printf("%s is a global symbol, but will come from a shared library\n", argv[1]);
-	return 0;
+        return 0;
 }
